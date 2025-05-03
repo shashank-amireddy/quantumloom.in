@@ -1,4 +1,4 @@
-import type { CardListData, Config, IntegrationUserConfig, ThemeUserConfig } from './../../packages/pure/types'
+import type { CardListData, Config, IntegrationUserConfig, ThemeUserConfig } from './../packages/pure/types'
 
 export const theme: ThemeUserConfig = {
   // === Basic configuration ===
@@ -72,7 +72,7 @@ export const theme: ThemeUserConfig = {
     blogPageSize: 8,
     externalLinkArrow: true, // show external link arrow
     // Currently support x
-    share: ['x', 'bluesky']
+    share: ['x', 'bluesky','weibo']
   }
 }
 

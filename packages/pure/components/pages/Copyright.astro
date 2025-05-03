@@ -24,7 +24,10 @@ const shares = {
   },
   bluesky: {
     link: `https://t.me/share/url?url=${Astro.url}&text=${title}` // using 'bluesky' as placeholder for Telegram
-  }
+  },
+  weibo : {
+    link: `https://www.linkedin.com/sharing/share-offsite/?url=${Astro.url}`
+  },
 } as const
 
 
@@ -95,7 +98,8 @@ const shares = {
             id={`share-${share}`}
             class='group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5'
           >
-            <Icon class='size-5' name={share === 'bluesky' ? 'telegram' : share} />
+            <Icon class="size-5" name={share === 'bluesky' ? 'telegram' : share === 'weibo' ? 'linkedin' : share} />
+
           </a>
         ))
       }
