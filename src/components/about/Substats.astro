@@ -1,0 +1,41 @@
+---
+import { socialLinks, type iconsType } from 'astro-pure/types'
+import { Icon } from './../../../packages/pure/components/user'
+
+interface SubstatsItem {
+  platform: string
+  icon: (typeof socialLinks)[number]
+  color?: string
+  link?: string
+}
+
+type Props = {
+  stats: SubstatsItem[]
+}
+
+const { stats } = Astro.props as Props
+
+
+---
+
+<div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 rounded-xl border p-2 sm:p-3'>
+  {
+    stats.map(({ link, platform, icon, color}) => (
+      <a
+        class='group text-muted-foreground no-underline'
+        href={link}
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        <div class='flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-all hover:border-border hover:bg-muted'>
+          {icon && <Icon name={icon as iconsType} color={color} />}
+          <div class='flex-1 text-foreground transition-colors group-hover:text-primary'>
+            {platform}
+          </div>
+          
+        </div>
+      </a>
+    ))
+  }
+</div>
+

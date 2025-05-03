@@ -1,0 +1,217 @@
+---
+
+import { Collapse, Spoiler } from 'astro-pure/user'
+import PageLayout from '@/layouts/CommonPage.astro'
+import Substats from '@/components/about/Substats.astro'
+import ToolSection from '@/components/about/ToolSection.astro'
+
+const headings = [
+  { depth: 2, slug: 'hobbies', text: 'Hobbies' },
+  { depth: 2, slug: 'tools', text: 'Tools' },
+  { depth: 2, slug: 'social-networks', text: 'Social Networks' },
+  { depth: 2, slug: 'gossips', text: 'Gossips' }
+]
+---
+
+<PageLayout title='About' {headings} info='/about'>
+  <p>Web3 Developer / Security Researcher</p>
+  <p>Hi, I’m Shashank — a curious mind exploring the intersection of cybersecurity, blockchain, and software engineering.</p>
+
+  <p>I’m an undergraduate computer science student with a growing focus on cybersecurity—especially cryptography and capture-the-flag (CTF) challenges. I actively compete with bi0s, one of India’s top CTF teams, where I sharpen my skills through real-world problem solving and hands-on exploration.</p>
+    
+  <p>I’m especially passionate about decentralization and Web3. Working with smart contracts and building dApps allows me to merge security-focused thinking with the creativity of software development—an intersection I find endlessly exciting.</p>
+    
+  <p>Outside the terminal, you’ll often find me deep in a book or admiring mechanical watches. I enjoy quirky reads like How to Lie with Statistics—because even numbers can bend the truth without context.</p>
+    
+  <p>I don’t claim to know everything. I just believe in asking better questions every day.</p> <Spoiler>Stay hungry, stay foolish.</Spoiler>
+   
+    
+  
+  
+
+  {/* general-talk */}
+  <h2 id='hobbies'>Hobbies</h2>
+  <ul>
+    <li>Solving CTFs — I enjoy the rush of breaking things (ethically) to understand how they work.</li>
+    <li>Reading books that make me think differently, especially non-fiction and the occasional offbeat gem.</li>
+    <li>Journaling my thoughts, questions, and “aha” moments—mostly to make sense of the chaos.</li>
+    <li>Listening to podcasts that feed my curiosity—tech, psychology, or anything that sparks a new idea.</li>
+    <li>Exploring new tools, ideas, and technologies just for the fun of discovering something unexpected.</li>
+  </ul>
+
+  {/* tools */}
+  <h2 id='tools'>Tools</h2>
+  <p>These are the tools I reach for when building, debugging, or exploring. From smart contract development to solving CTF challenges, each one supports how I learn and create.</p>
+  <ToolSection
+    class='mb-5'
+    title='Productivity'
+    tools={[
+    {
+      name: 'Zen',
+      description: 'Browser',
+      href: 'https://www.zenbrowser.io/', // If you meant Zen Browser
+      icon: import('@/assets/icons/zen.svg?raw')
+    },
+    {
+      name: 'Brave',
+      description: 'Browser',
+      href: 'https://brave.com/', // Correct link for Brave browser
+      icon: import('@/assets/icons/brave.svg?raw')
+    },
+    {
+      name: 'Notion',
+      description: 'Note Taking',
+      href: 'https://www.notion.so/',
+      icon: import('@/assets/icons/notion.svg?raw')
+    },
+    {
+      name: 'Obsidian',
+      description: 'Markdown Editor',
+      href: 'https://obsidian.md/', // Correct link for Obsidian, not Typora
+      icon: import('@/assets/icons/obsidian.svg?raw')
+    }
+
+    ]}
+  />
+  <ToolSection
+  class="mb-5"
+  title="Web3 & Crypto Stack"
+  tools={[
+    {
+      name: 'SageMath',
+      description: 'Mathematics Software System',
+      href: 'https://www.sagemath.org/',
+      icon: import('@/assets/icons/sage.svg?raw')
+    },
+    {
+      name: 'Foundry',
+      description: 'Ethereum Development Toolkit',
+      href: 'https://book.getfoundry.sh/', // Correct for Foundry
+      icon: import('@/assets/icons/foundry.svg?raw')
+    },
+    {
+      name: 'MetaMask',
+      description: 'Crypto Wallet',
+      href: 'https://metamask.io/',
+      icon: import('@/assets/icons/metamask.svg?raw')
+    },
+    {
+      name: 'Ganache',
+      description: 'Blockchain for Ethereum Development',
+      href: 'https://trufflesuite.com/ganache/',
+      icon: import('@/assets/icons/ganache.svg?raw')
+    }
+  ]}
+/>
+
+<ToolSection
+  class="mb-5"
+  title="Development"
+  tools={[
+    {
+      name: 'VS Code',
+      description: 'IDE',
+      href: 'https://code.visualstudio.com/',
+      icon: import('@/assets/icons/vscode.svg?raw')
+    },
+    {
+      name: 'Remix',
+      description: 'IDE for Ethereum Smart Contracts',
+      href: 'https://remix.ethereum.org/', // Corrected from Neovim
+      icon: import('@/assets/icons/remix.svg?raw')
+    },
+    {
+      name: 'Git',
+      description: 'Version Control System',
+      href: 'https://git-scm.com/', // Corrected from Sublime Text
+      icon: import('@/assets/icons/git.svg?raw')
+    },
+    {
+      name: 'Docker',
+      description: 'Containerization Platform',
+      href: 'https://www.docker.com/', // Corrected from Sublime Text
+      icon: import('@/assets/icons/docker.svg?raw')
+    }
+  ]}
+/>
+
+  <ToolSection
+    class='mb-5'
+    title='Environment'
+    tools={[
+      
+      {
+        name: 'Ubuntu 24.04 LTS',
+        description: 'Linux Distribution',
+        href: 'https://ubuntu.com/',
+        icon: import('@/assets/icons/ubuntu.svg?raw')
+      },
+      {
+        name: 'Windows 11',
+        description: 'Acer Aspire 5',
+        href: 'https://news.microsoft.com/windows11-general-availability/',
+        icon: import('@/assets/icons/windows11.svg?raw')
+      }
+    ]}
+  />
+
+  {/* social-networks */}
+  <h2 id='social-networks'>Social Networks</h2>
+  <p>
+    Stay connected and follow my journey on social media for updates, projects, and more!
+  </p>
+  <Substats
+    stats={[
+      {
+        platform: 'GitHub',
+        icon: 'github',
+        link: 'https://github.com/shashank-amireddy'
+      },
+      {
+        platform: 'Telegram',
+        icon: 'telegram',
+        color: '#2ca5e0',
+        link: 'https://http://t.me/shashankamireddy'
+      },
+      {
+        platform: 'X',
+        icon: 'x',
+        link: 'https://x.com/0xquantumloom'
+      },
+      {
+        platform: 'Discord',
+        icon: 'discord',
+        color: '#7289da',
+        link: 'https://discord.com/users/758375198662590515'
+      },
+      {
+        platform: 'LinkedIn',
+        icon: 'linkedin',
+        color: '#0077B5',
+        link: 'https://www.linkedin.com/in/shashank-amireddy/'
+      },
+      {
+        platform: 'Instagram',
+        icon: 'instagram',
+        color: '#C13584',
+        link: 'https://www.instagram.com/shashank.reddy__/'
+      }
+    ]}
+  />
+
+  {/* gossips */}
+  <h2 id='gossips'>Gossips</h2>
+  <Collapse title="Don\'t Open This!">
+    Everyone's talking about it, but trust me, you don't want to click the link below. It's a trap!<br>
+    There's a secret out there that you absolutely should NOT open. It's too powerful for you!<br>
+    Just don’t. Don’t even think about it.
+  
+    <br><br>
+    <b>Seriously:</b> Don’t click the link, it will change everything!<br>
+    <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" id="rickroll-link">
+      You’ve been warned... but if you click, don’t say we didn’t warn you!
+    </a>
+  </Collapse>
+  
+
+</PageLayout>
