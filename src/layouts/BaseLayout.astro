@@ -3,7 +3,7 @@ import { Footer, Header, ThemeProvider } from './../../packages/pure/components/
 import type { SiteMeta } from 'astro-pure/types'
 import BaseHead from '@/components/BaseHead.astro'
 import config from '@/site-config'
-
+import Analytics from '@vercel/analytics/astro';
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseLayout /> component.
 import '@/assets/styles/app.css'
@@ -53,5 +53,6 @@ const {
         ) !important;
       }
     </style>
+    <Analytics />
   </body>
 </html>
