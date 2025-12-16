@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets'
 
-import { Button, Collapse } from 'astro-pure/user'
+import { Button} from 'astro-pure/user'
 import PageLayout from '@/layouts/CommonPage.astro'
 import ProjectSection from '@/components/projects/ProjectSection.astro'
 import KeyIcon from '@/assets/icons/key.svg'
@@ -11,10 +11,10 @@ const headings = [
   { depth: 2, slug: 'web3', text: 'Decentralized' },
   { depth: 2, slug: 'crypto', text: 'Cryptography' },
   { depth: 2, slug: 'extensions', text: 'Extensions' },
+  { depth: 2, slug: 'Development', text: 'Development' },
   { depth: 2, slug: 'learnings', text: 'Learnings' },
   { depth: 2, slug: 'writeups', text: 'Writeups' },
-  { depth: 2, slug: 'others', text: 'Others' },
-  { depth: 2, slug: 'gpg-signature', text: 'GPG Signature' },
+  { depth: 2, slug: 'gpg-signature', text: 'GPG Signature' }
 ]
 ---
 
@@ -42,6 +42,15 @@ const headings = [
         description: 'A crowdfunding platform built on Ethereum, allowing users to create and fund projects using smart contracts.',
         links: [
           { type: 'github', href: 'https://github.com/shashank-amireddy/crowdfunding' },
+          // { type: 'site', href: 'https://t.me/PtiIopsis_bot' },
+          
+        ]
+      },
+      {
+        name: 'SolShield',
+        description: 'A comprehensive security analysis platform for Solidity smart contracts.',
+        links: [
+          { type: 'github', href: 'https://github.com/shashank-amireddy/SolShield' },
           // { type: 'site', href: 'https://t.me/PtiIopsis_bot' },
           
         ]
@@ -99,6 +108,27 @@ const headings = [
       }
     ]}
   />
+  
+  <h2 id='Development'>Development</h2>
+  <ProjectSection
+    project={[
+      {
+        name: 'API-starter-kit',
+        description: "A production-ready REST API starter built with Node.js, Express, and PostgreSQL.",
+        links: [{ type: 'github', href: 'https://github.com/shashank-amireddy/node-express-api-starter' }]
+      },
+      {
+        name: 'everyRupee',
+        description: "Kotlin based mobile application for tracking expenses and income.",
+        links: [{ type: 'github', href: 'https://github.com/shashank-amireddy/everyRupee' }]
+      },
+      {
+        name: 'myWeather',
+        description: 'Flutter application that provides current weather information',
+        links: [{ type: 'github', href: 'https://github.com/shashank-amireddy/myWeather' }]
+      }
+    ]}
+  />
 
   <h2 id='learnings'>Learnings</h2>
   <ProjectSection
@@ -139,21 +169,7 @@ const headings = [
       }
     ]}
   />
-  <h2 id='others'>Others</h2>
-  <ProjectSection
-    project={[
-      {
-        name: 'everyRupee',
-        description: "Kotlin based mobile application for tracking expenses and income.",
-        links: [{ type: 'github', href: 'https://github.com/shashank-amireddy/everyRupee' }]
-      },
-      {
-        name: 'myWeather',
-        description: 'Flutter application that provides current weather information',
-        links: [{ type: 'github', href: 'https://github.com/shashank-amireddy/myWeather' }]
-      }
-    ]}
-  />
+
 
   <!-- gpg signature -->
   <h2 id='gpg-signature'>GPG Signature</h2>
