@@ -1,0 +1,728 @@
+---
+title: 'Blast RADIUS: How "Access-Reject" Became "Access-Accept"'
+publishDate: 'Jul 18, 2026'
+description: 'Somewhere on the wire, a packet that should have said "No" learned to say "Yes".'
+tags:
+  - Blast RADIUS
+  - RADIUS
+  - Network Security
+  - Authentication
+  - Cryptography
+  - Protocol Security
+
+
+language: 'English'
+heroImage: { src: './thumbnail.png', color: '#826346' }
+---
+
+import { Aside } from 'astro-pure/user'
+
+
+## Your Password Is Wrong
+
+The server knows it's wrong.
+
+It sends back an **Access-Reject**.
+
+Everything worked exactly as designed.
+
+Except...
+
+you still get in.
+
+No stolen credentials.
+
+No brute forcing.
+
+No leaked shared secret.
+
+Somewhere between the client and the server, a packet that was supposed to deny access quietly transforms into one that grants it. The client verifies its authenticity, trusts it completely, and opens the door.
+
+If that sounds impossible, you're not alone.
+
+For nearly three decades, network engineers believed this couldn't happen.
+
+Until **Blast RADIUS** proved otherwise.
+
+---
+
+## The Protocol Everyone Trusted
+
+> *For over thirty years, one protocol quietly authenticated billions of network logins.*
+
+If you've ever connected to enterprise Wi-Fi, logged into a VPN, or authenticated to a network device, there's a good chance **RADIUS** was involved.
+
+Designed in the early 1990s, the **Remote Authentication Dial-In User Service (RADIUS)** became the de facto authentication protocol for enterprise networks. Today it sits behind corporate Wi-Fi, VPN concentrators, routers, switches, firewalls, Linux PAM, ISP infrastructure, and global roaming services like **eduroam**.
+
+It isn't flashy.
+
+Most users never realize it's there.
+
+Yet every day, billions of authentication requests quietly pass through RADIUS servers around the world.
+
+Most deployments still use **RADIUS over UDP**, carrying forward a design made in an era when **MD5 was considered state-of-the-art cryptography**. At the time, it was a perfectly reasonable engineering decision.
+
+Protocols, however, often outlive the assumptions they were built on.
+
+Three decades later, that decision became RADIUS's greatest weakness.
+
+---
+
+## The Packet Nobody Questions
+
+Every authentication protocol has to answer one fundamental question:
+
+> **How do you know the response actually came from the server?**
+
+Without some way to verify authenticity, anyone capable of intercepting network traffic could simply fabricate an `Access-Accept` packet and bypass authentication altogether.
+
+RADIUS solves this using something called the **Response Authenticator**.
+
+Every `Access-Accept`, `Access-Reject`, and `Access-Challenge` packet contains this value. It acts as a cryptographic fingerprint computed from several packet fields, the original **Request Authenticator**, and a shared secret known only to the client and the server.
+
+```text
+Response Authenticator =
+MD5(
+    Code ||
+    Identifier ||
+    Length ||
+    Request Authenticator ||
+    Attributes ||
+    Shared Secret
+)
+```
+
+The client performs the exact same computation after receiving the response.
+
+If both values match, the packet is accepted.
+
+If they don't, it is silently discarded.
+
+At first glance, this mechanism appears extremely difficult to defeat.
+
+The shared secret is never transmitted across the network.
+
+An attacker can observe every packet exchanged between the client and the server but without the secret, they seemingly have no way to generate a valid Response Authenticator.
+
+That's exactly why the protocol survived for so long.
+
+---
+
+### A Real RADIUS Response
+
+A simplified `Access-Reject` packet looks roughly like this:
+
+```text
+Code          = 3 (Access-Reject)
+Identifier    = 0x71
+Length        = ...
+Authenticator = e3 42 9d ...
+
+Attributes
+    Reply-Message
+    Session-Timeout
+    Proxy-State
+```
+
+When the client receives this packet, it doesn't blindly trust the server.
+
+Instead, it recomputes the Response Authenticator using the shared secret.
+
+![Request Authenticator diagram](./1%20w.png)
+
+The beauty of the design lies in its simplicity.
+
+The server proves it knows the shared secret without ever revealing it.
+
+For nearly thirty years, that guarantee seemed unbreakable.
+
+<Aside type='tip' title='Under the Hood: Why include the Request Authenticator?'>
+        Every `Access-Request` contains a randomly generated 16-byte **Request Authenticator**.
+
+        Including it in the hash ensures that even if two users submit identical credentials, the
+        resulting Response Authenticators are different.
+
+        It also prevents replay attacks by ensuring that a previously captured response cannot simply be
+        reused for another authentication attempt.
+</Aside>
+
+
+Everything appears secure.
+
+The attacker doesn't know the shared secret.
+
+The server never reveals it.
+
+The client verifies every response independently.
+
+So where does Blast RADIUS fit into all of this?
+
+The answer isn't hidden inside the secret.
+
+It's hidden inside a quiet assumption the protocol made about **MD5**. That assumption remained true for decades, until cryptography finally caught up.
+
+---
+
+## Enter Blast RADIUS
+
+> *Every exploit begins with a question everyone else stopped asking.*
+
+For years, the weaknesses of **MD5** were no secret.
+
+Researchers had demonstrated collisions. Browsers had abandoned MD5 certificates. Cryptographers had repeatedly warned against using it for new designs.
+
+Yet RADIUS remained largely untouched.
+
+Why?
+
+Because knowing that MD5 is broken doesn't automatically let you forge a valid RADIUS response.
+
+Every Response Authenticator still depends on a shared secret known only to the client and the server.
+
+Without that secret, forging a valid hash appears impossible.
+
+That assumption held until researchers asked a different question.
+
+> **What if we don't need to know the secret at all?**
+
+Instead of attacking passwords...
+
+Instead of attacking encryption...
+
+Instead of attacking the server...
+
+**Blast RADIUS attacks the protocol's trust model.**
+
+An attacker positioned between the client and the RADIUS server doesn't need to decrypt packets or recover credentials. They simply manipulate a legitimate authentication exchange until the client accepts a response the server never intended to send.
+
+Not by breaking authentication.
+
+But by exploiting the way authentication is verified.
+
+![Chosen-prefix collision illustration](./2%20w.png)
+ 
+At first glance, this sounds impossible.
+
+If the attacker cannot compute the Response Authenticator...
+
+how can they possibly produce a packet that passes verification?
+
+The answer isn't hidden in the shared secret.
+
+It's hidden in the mathematics of MD5 itself.
+
+---
+
+## Why the Secret Isn't Enough
+
+> *The protocol trusted the secret.*
+>
+> *The attacker trusted mathematics.*
+
+The security of the Response Authenticator rests on a simple assumption:
+
+Appending a secret to the end of a message should prevent anyone from forging a valid hash.
+
+Unfortunately, cryptographic hash functions don't work that way.
+
+Blast RADIUS relies on a technique known as a **chosen-prefix collision**.
+
+Unlike a traditional collision, where two arbitrary messages happen to produce the same digest, a chosen-prefix collision allows an attacker to begin with **two completely different messages** and carefully construct additional data so that both eventually produce an identical MD5 hash.
+
+Think of it like this.
+
+Imagine two novels.
+
+One ends with the hero surviving.
+
+The other ends with the hero dying.
+
+They tell completely different stories.
+
+Yet somehow, after adding hundreds of carefully chosen pages to each, both books end up with the exact same fingerprint.
+
+That's the power of a chosen-prefix collision.
+
+<Aside type='tip' title='Under the Hood: Chosen-Prefix Collisions'>
+        A chosen-prefix collision doesn't require two messages to begin the same way.
+
+        The attacker is free to choose completely different prefixes before generating specially crafted
+        collision blocks that force both messages toward the same internal MD5 state.
+
+        The mathematics behind this process is extraordinarily complex, but its consequence is simple:
+
+        **Two different messages become indistinguishable to MD5.**
+</Aside>
+
+Even now, the attack still appears impossible.
+
+After all, the shared secret is appended **after** the packet contents.
+
+Wouldn't that produce different hashes?
+
+This is where MD5's design becomes important.
+
+MD5 processes data sequentially.
+
+It doesn't understand *messages*.
+
+It only understands *bytes*.
+
+Once two carefully crafted inputs reach the exact same internal state, feeding both of them the same remaining bytes causes them to stay synchronized.
+
+The shared secret isn't protecting the collision.
+
+It's simply more input.
+
+As a result...
+
+![Response Authenticator collision diagram](./4%20w.png)
+
+The attacker never discovers the shared secret.
+
+They never guess it.
+
+They never recover it.
+
+They simply rely on the fact that **the same unknown value is appended to both colliding messages.**
+
+That's the subtle observation Blast RADIUS builds upon.
+
+It transforms a weakness in MD5 into a weakness in the protocol itself.
+
+For the first time, the attacker has something they never had before.
+
+Not the shared secret.
+
+Not the server's private state.
+
+But the ability to construct **two different RADIUS responses that produce the exact same Response Authenticator.**
+
+There is only one problem left.
+
+Chosen-prefix collisions require hundreds of carefully crafted bytes.
+
+RADIUS packets aren't designed to carry arbitrary data.
+
+So where do you hide a collision without breaking the protocol?
+
+---
+
+## Hiding a Collision in Plain Sight
+
+> *Sometimes the safest place to hide something is where nobody thinks to look.*
+
+The hardest part of Blast RADIUS isn't generating the collision.
+
+It's fitting that collision inside a valid RADIUS packet.
+
+Chosen-prefix collisions aren't small.
+
+They typically require **hundreds of bytes** of carefully generated data.
+
+If those bytes were inserted into most RADIUS attributes, the server would reject the packet long before the Response Authenticator was ever checked.
+
+Blast RADIUS solves this problem using one of the protocol's least interesting attributes.
+
+**Proxy-State.**
+
+Defined for RADIUS proxies, `Proxy-State` allows intermediary systems to attach opaque metadata to authentication requests.
+
+The server doesn't interpret its contents.
+
+It doesn't validate them.
+
+It simply copies the attribute into the corresponding response exactly as it was received.
+
+That tiny implementation detail becomes the attacker's hiding place.
+
+The attacker intercepts the victim's `Access-Request`, appends a malicious `Proxy-State` attribute containing the collision blocks, and forwards the request to the server.
+
+The server authenticates the user as usual.
+
+Completely unaware that it is carrying attacker-controlled data.
+
+When the response is generated, the server faithfully echoes the `Proxy-State` attribute back.
+
+Exactly as the RFC requires.
+
+<Aside type='tip' title='Under the Hood: Why Proxy-State?'>
+        Most RADIUS attributes have meaning.
+
+        Changing them changes the request.
+
+        `Proxy-State` is different.
+
+        The server treats it as opaque metadata, making it one of the few places where an attacker can
+        safely embed hundreds of bytes without affecting authentication.
+</Aside>
+
+![Proxy-State collision blocks](./3%20w.png)
+
+
+Now both responses
+
+the legitimate `Access-Reject`
+
+and the forged `Access-Accept`
+
+contain the exact same collision blocks in the exact same location.
+
+The server computes only one Response Authenticator.
+
+The attacker never computes either.
+
+Instead...
+
+they convince the server to compute a hash that is valid for **two different packets.**
+
+> **The packet was never supposed to open the door.**
+>
+> **It only had to convince the client that it already had.**
+
+---
+
+## Watching Blast RADIUS Happen
+
+> *Every packet is telling the truth.*
+>
+> *Just not the same truth.*
+
+Up to this point, we've explored each piece of the attack in isolation.
+
+The Response Authenticator.
+
+Chosen-prefix collisions.
+
+Proxy-State.
+
+The shared secret.
+
+Individually, none of them are vulnerabilities.
+
+Blast RADIUS emerges only when those pieces interact.
+
+Let's follow a single authentication exchange from beginning to end.
+
+---
+
+### Phase 1:  A Normal Authentication Request
+
+Everything begins with an ordinary `Access-Request`.
+
+A user enters the wrong password while connecting to a corporate Wi-Fi network.
+
+The client creates an authentication request, includes a randomly generated **Request Authenticator**, and sends it toward the RADIUS server.
+
+Nothing about the packet is unusual.
+
+If you captured it in Wireshark, it would look exactly like thousands of legitimate authentication requests.
+
+At this point, neither the client nor the server knows an attacker is sitting between them.
+
+---
+
+### Phase 2:  The Attacker Changes One Thing
+
+The request passes through the attacker.
+
+Nothing is removed.
+
+No credentials are modified.
+
+No headers are forged.
+
+The attacker simply appends a `Proxy-State` attribute containing the carefully generated collision blocks before forwarding the request.
+
+To every compliant RADIUS implementation, `Proxy-State` is just opaque metadata.
+
+The server has no reason to reject it.
+
+The authentication process continues exactly as it would have otherwise.
+
+From the user's perspective, nothing has happened.
+
+---
+
+### Phase 3: The Server Rejects the Login
+
+The RADIUS server receives the request and validates the credentials.
+
+They're incorrect.
+
+The correct response is an `Access-Reject`.
+
+The server constructs the response exactly as defined by the protocol, computes the Response Authenticator using the shared secret, and then copies the `Proxy-State` attribute into the response exactly as RFC 2865 requires.
+
+Every step is correct.
+
+The server behaves exactly as it was designed to.
+
+---
+
+### Phase 4: The Packet Swap
+
+The `Access-Reject` never reaches the client.
+
+Instead, it reaches the attacker.
+
+This is the only active step in the entire exploit.
+
+The legitimate response is discarded.
+
+In its place, the attacker forwards a precomputed `Access-Accept`.
+
+The server never generated this packet.
+
+The attacker never computed its Response Authenticator.
+
+Yet the packet carries a Response Authenticator that the client will accept as valid.
+
+The server answered one question.
+
+The client received another answer.
+
+---
+
+### Phase 5: The Client Verifies the Wrong Packet
+
+The client receives an `Access-Accept`.
+
+It doesn't know the packet was swapped.
+
+Like every compliant RADIUS implementation, it performs a single verification.
+
+> **Does the Response Authenticator match?**
+
+The answer is **yes**.
+
+The packet is accepted.
+
+The login succeeds.
+
+The network believes the server approved the authentication.
+
+It never did.
+
+> **The packet should have said "No."**
+>
+> **By the time it reached the client, it had learned to say "Yes."**
+
+---
+
+### The Trick
+
+At first glance, Blast RADIUS looks like a broken integrity check.
+
+It isn't.
+
+The integrity check works exactly as designed.
+
+The Response Authenticator is valid.
+
+The client verifies it correctly.
+
+The server generated it legitimately.
+
+Nothing in the verification process fails.
+
+The attacker simply changes **which packet** that cryptographic proof is attached to.
+
+Blast RADIUS doesn't defeat authentication.
+
+It exploits an assumption authentication quietly relied on for three decades:
+
+> **A valid cryptographic proof belongs to exactly one message.**
+
+MD5's chosen-prefix collisions prove that assumption is no longer true.
+
+---
+
+### One Picture
+
+If you've forgotten everything else in this article...
+
+remember this.
+
+```text
+                Normal Authentication
+
+Client ─────────────► Server
+
+                Access-Reject
+
+Client ◄───────────── Server
+
+          Authentication Failed
+
+
+──────────────────────────────────────────────
+
+
+                 Blast RADIUS
+
+Client ───────► MITM ───────► Server
+
+               Access-Reject
+
+Client ◄────── MITM ◄────── Server
+                  │
+                  │ Replace Packet
+                  ▼
+
+              Access-Accept
+
+       Response Authenticator ✓
+
+        Authentication Successful
+```
+
+Everything you've learned in this article, from the Response Authenticator to chosen-prefix collisions, exists to make one impossible outcome appear legitimate.
+
+The server rejected the login.
+
+The client accepted it.
+
+---
+
+## The Bigger Lesson
+
+> *The exploit ends here.*
+>
+> *The lesson doesn't.*
+
+The easiest takeaway from Blast RADIUS is also the wrong one.
+
+> **"MD5 is broken."**
+
+That was already true.
+
+Cryptographers had been warning against MD5 for years.
+
+Browsers abandoned it.
+
+Certificate authorities abandoned it.
+
+Security engineers stopped designing new systems around it long ago.
+
+Blast RADIUS didn't reveal a new weakness in MD5.
+
+It revealed something arguably more dangerous.
+
+Protocols don't usually fail overnight.
+
+They fail gradually.
+
+One assumption becomes outdated.
+
+Another becomes fragile.
+
+Eventually, a protocol that was once secure begins trusting guarantees that cryptography no longer provides.
+
+A protocol can survive for decades without a single line of code changing, while the assumptions beneath it slowly erode.
+
+RADIUS wasn't compromised because someone wrote insecure software in 2024.
+
+It was compromised because a protocol designed in the early 1990s continued trusting cryptography that no longer deserved that trust.
+
+That's a very different lesson.
+
+And one that extends far beyond RADIUS.
+
+---
+
+## More Than an MD5 Problem
+
+Blast RADIUS isn't really about MD5.
+
+It's about **composition**.
+
+Every individual component behaved correctly.
+
+The server authenticated the request correctly.
+
+The shared secret remained secret.
+
+The Response Authenticator verified exactly as specified.
+
+The client followed the RFC.
+
+The server followed the RFC.
+
+Even MD5 behaved exactly as MD5 was designed to behave.
+
+Yet authentication still failed.
+
+Not because one component broke.
+
+Because all of them interacted in a way nobody anticipated thirty years ago.
+
+Security engineers have a saying:
+
+> **Secure components do not automatically compose into secure systems.**
+
+Blast RADIUS is one of the clearest demonstrations of that principle.
+
+---
+
+## Why "Just Replace MD5" Doesn't Work
+
+Ironically...
+
+Replacing MD5 isn't enough.
+
+The Response Authenticator is baked into the protocol itself.
+
+Simply replacing the hash algorithm would immediately make existing clients and servers incompatible.
+
+Instead, the short-term mitigation focuses on removing the attack's hiding place.
+
+Vendor patches released after the disclosure reject or sanitize malicious `Proxy-State` attributes before they can participate in the collision.
+
+The long-term solution is to stop relying on legacy RADIUS security altogether.
+
+Modern deployments are gradually moving toward protected transports such as **RADIUS over TLS (RadSec)** and **RADIUS over DTLS**, where the protocol no longer depends on an MD5-based integrity mechanism.
+
+Blast RADIUS didn't just expose a vulnerability.
+
+It accelerated a migration that should have happened years ago.
+
+---
+
+## If You Remember One Thing...
+
+The password never changed.
+
+The server never changed its mind.
+
+The shared secret never leaked.
+
+Only one thing changed.
+
+The packet.
+
+It left the server carrying one answer.
+
+It arrived carrying another.
+
+For nearly thirty years, RADIUS assumed those two moments were inseparable.
+
+Blast RADIUS proved they weren't.
+
+---
+
+## Further Reading
+
+If this article sparked your curiosity, the original research is absolutely worth reading.
+
+Unlike this write-up, which focused on building intuition, the paper dives deep into the cryptographic engineering that transformed decades of MD5 research into a practical protocol attack.
+
+- **Blast RADIUS: Breaking the RADIUS Protocol with MD5 Chosen-Prefix Collisions**
+- RFC 2865 Remote Authentication Dial In User Service (RADIUS)
+- RFC 5080 Common RADIUS Implementation Issues and Suggested Fixes
+- Marc Stevens' **HashClash** project
+- FreeRADIUS documentation and vendor advisories published after the disclosure
+
+
+
+

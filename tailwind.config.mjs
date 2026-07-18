@@ -12,9 +12,21 @@ const typographyConfig = ({ theme }) => ({
       '--tw-prose-body': fgMuted,
       '--tw-prose-links': fg,
       '--tw-prose-quotes': fgMuted,
-      '--tw-prose-code:': fg,
+      '--tw-prose-code': fg,
       '--tw-prose-pre-code': fgMuted,
       '--tw-prose-pre-bg': bgMuted,
+
+      code: {
+        color: fg,
+        backgroundColor: bgMuted,
+        borderRadius: theme('borderRadius.sm'),
+        paddingInline: '0.35em',
+        paddingBlock: '0.15em',
+        fontWeight: '500'
+      },
+      'code::before, code::after': {
+        content: 'none'
+      },
 
       'h2, h3, h4, h5, h6': {
         scrollMarginTop: '3rem',

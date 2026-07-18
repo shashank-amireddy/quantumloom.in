@@ -106,7 +106,7 @@ export const integ: IntegrationUserConfig = {
   typography: {
     // https://github.com/tailwindlabs/tailwindcss-typography
     class:
-      'break-words prose prose-pure dark:prose-invert dark:prose-pure prose-headings:font-medium'
+      'break-words prose prose-pure dark:prose-invert dark:prose-pure prose-headings:font-medium prose-code:before:content-none prose-code:after:content-none'
   },
   // A lightbox library that can add zoom effect
   mediumZoom: {
